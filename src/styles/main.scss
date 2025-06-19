@@ -1,0 +1,14 @@
+@import './normalize';
+@import './fonts';
+
+body {
+	font-family: 'Roboto', sans-serif;
+	margin: 0;
+	padding: 0;
+	background: #f6f7f8;
+	color: #333;
+}
+
+#app {
+	padding: 2rem;
+}
