@@ -1,0 +1,13 @@
+a {
+	color: var(--color-accent);
+	text-decoration: none;
+
+	&.light {
+		color: var(--color-primary);
+	}
+
+	&:hover,
+	&:focus {
+		text-decoration: underline;
+	}
+}

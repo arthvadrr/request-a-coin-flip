@@ -5,11 +5,13 @@
 		"dev": "rollup -c -w",
 		"build": "rollup -c"
 	},
+	"type": "module",
 	"devDependencies": {
-		"rollup": "^4.44.0",
-		"rollup-plugin-scss": "^4.0.1",
-		"@rollup/plugin-terser": "^0.4.4",
 		"@rollup/plugin-node-resolve": "^16.0.1",
+		"@rollup/plugin-terser": "^0.4.4",
+		"rollup": "^4.44.0",
+		"rollup-plugin-sass": "^1.15.3",
+		"rollup-plugin-string": "^3.0.0",
 		"sass": "^1.89.2"
 	}
 }
