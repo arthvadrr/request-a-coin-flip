@@ -14,6 +14,25 @@
 		class="button full"
 	>
 		<svg class="icon icon-share"><use xlink:href="#icon-share"></use></svg>
-		<span>Share a Coin Flip</span>
+		<span>Request a Coin Flip</span>
 	</button>
+	<div
+		class="request-result show"
+		id="request-success"
+	>
+		<h2>Success!</h2>
+		<p>
+			Your single use coin flip link has been created and
+			<strong>copied</strong> to your clipboard! Please
+			<strong>share the link</strong> with someone and they will be prompted to
+			flip.
+		</p>
+	</div>
+	<div
+		class="request-result"
+		id="request-error"
+	>
+		<h2>Error!</h2>
+		<p>Oops! Something went wrong. Please try again later.</p>
+	</div>
 </section>

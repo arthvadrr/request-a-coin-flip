@@ -5,6 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 import sass from 'rollup-plugin-sass';
 import { string } from 'rollup-plugin-string';
+import copy from 'rollup-plugin-copy';
 
 dotenv.config();
 
@@ -31,6 +32,9 @@ export default [
 				preventAssignment: true,
 				'process.env.SERVER_URI': JSON.stringify(process.env.SERVER_URI),
 				'process.env.ANON_KEY': JSON.stringify(process.env.ANON_KEY),
+			}),
+			copy({
+				targets: [{ src: 'src/fonts/*', dest: 'public/build/fonts' }],
 			}),
 		],
 	},
