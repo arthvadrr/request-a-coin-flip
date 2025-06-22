@@ -4,7 +4,6 @@ import '../styles/main.scss';
 
 const params = new URLSearchParams(window.location.search);
 const flipId = params.get('flip');
-
 const app = document.getElementById('app');
 
 if (flipId) {

@@ -2,7 +2,7 @@
 	background: var(--color-primary);
 	color: var(--color-light);
 	padding: 2rem 1rem;
-	font-size: 1rem;
+	font-size: 1.2rem;
 	font-family: inherit;
 	border: none;
 	transition: all 80ms ease-in-out;
@@ -22,10 +22,15 @@
 		width: 100%;
 	}
 
+	&[disabled=''] {
+		background-color: #545454;
+		outline-color: #7e7e7e;
+	}
+
 	.icon {
 		display: inline-block;
-		width: 18px;
-		height: 18px;
+		width: 1.2rem;
+		height: 1.2rem;
 		stroke-width: 0;
 		stroke: currentColor;
 		fill: currentColor;

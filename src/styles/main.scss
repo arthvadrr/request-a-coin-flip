@@ -5,6 +5,8 @@
 @use './elements/link';
 @use './elements/section';
 @use './elements/list';
+@use './elements/request-result';
+@use './elements/toast';
 
 main * {
 	box-sizing: border-box;
@@ -16,6 +18,10 @@ main * {
 	--color-accent: #dbd7d5;
 	--color-highlight: #a8546d;
 	--color-light: #bababa;
+	--color-success: #7ffbbb;
+	--color-success-dark: #214833;
+	--color-error: #ff8b9e;
+	--color-error-dark: #410000;
 	--font-body: 'Roboto', sans-serif;
 }
 
@@ -60,6 +66,5 @@ body {
 		min-height: unset;
 		margin: 4rem;
 		overflow: hidden;
-		border-radius: 1rem;
 	}
 }
