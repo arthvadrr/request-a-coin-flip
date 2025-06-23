@@ -3,11 +3,13 @@ import { supabase } from "../util/supabaseClient.js";
 import { simulateCoinFlip } from "../util/coinFlip.js";
 import { copyToClipboard } from "../copyToClipboard.js";
 import { showToast } from "../util/toast.js";
+import { ensureAnonymousLogin } from "../util/auth.js";
 
 /**
  * Render the flip view, fetch and cache flip data, and handle coin flip logic.
  */
 export async function renderFlipView(container, id) {
+  await ensureAnonymousLogin();
   /**
    * Variable declarations
    */
@@ -82,13 +84,30 @@ export async function renderFlipView(container, id) {
 
   if (data) {
     document.getElementById("flip-id").textContent = data.id ?? "—";
+    // Human readable local time for created_at
     document.getElementById("flip-created").textContent = data.created_at
-      ? new Date(data.created_at).toLocaleString()
+      ? new Date(data.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
       : "—";
-    document.getElementById("flip-expires").textContent = data.expires_at
-      ? new Date(data.expires_at).toLocaleString()
-      : "—";
+    // Expiry as relative time (e.g. "in 10 minutes")
+    const expiresText = (() => {
+      if (!data.expires_at) return "—";
+      const expires = new Date(data.expires_at);
+      const now = new Date();
+      const diffMs = expires - now;
+      if (diffMs <= 0) return "Expired";
+      const diffMins = Math.round(diffMs / 60000);
+      if (diffMins < 1) return "< 1 minute";
+      if (diffMins === 1) return "in 1 minute";
+      return `in ${diffMins} minutes`;
+    })();
+    document.getElementById("flip-expires").textContent = expiresText;
 
+    /**
+     * Disable flip button if expired
+     */
+    if (flipBtn && expiresText === "Expired") {
+      flipBtn.disabled = true;
+    }
     /**
      * Disable the flip button if already flipped
      */
@@ -147,7 +166,7 @@ export async function renderFlipView(container, id) {
       coinDiv.classList.add(result ? "heads" : "tails");
     }
     if (flipBtn) {
-      flipBtn.disabled = true; // Immediately disable on click
+      flipBtn.disabled = true;
     }
     if (resultH2) {
       resultH2.textContent = "Flipping...";
