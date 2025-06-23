@@ -32,42 +32,6 @@ export async function renderFlipView(container, id) {
   data = cache[id] || null;
 
   /**
-   * If no cached data, fetch from supabase
-   */
-  if (!data) {
-    try {
-      const { data: fetched, error } = await supabase.from("flip-results").select("*").eq("id", id).single();
-      if (error || !fetched) {
-        console.error("Error fetching flip result:", error?.message);
-        delete cache[id];
-      } else {
-        data = fetched;
-        cache[id] = data;
-
-        /**
-         * Limit to 10 most recent IDs
-         */
-        const keys = Object.keys(cache);
-        if (keys.length > 10) {
-          const oldest = keys.sort((a, b) => {
-            const aTime = new Date(cache[a]?.created_at || 0).getTime();
-            const bTime = new Date(cache[b]?.created_at || 0).getTime();
-            return aTime - bTime;
-          });
-          for (let i = 0; i < keys.length - 10; i++) {
-            delete cache[oldest[i]];
-          }
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-      }
-    } catch (err) {
-      console.error("Unexpected error fetching flip result:", err);
-      delete cache[id];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-    }
-  }
-
-  /**
    * Query DOM elements after rendering
    */
   const flipBtn = document.getElementById("flipCoin");
@@ -75,29 +39,16 @@ export async function renderFlipView(container, id) {
   if (flipBtn) flipBtn.disabled = true;
 
   /**
-   * Enable flip button and remove captcha when solved
+   * Helper to render data to the view
    */
-  window.onCaptchaSuccess = function () {
-    const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
-    const alreadyFlipped = data && data.result !== null;
-    if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
-    if (captchaDiv) captchaDiv.remove();
-  };
-  if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
-
-  /**
-   * Query coin and result elements
-   */
-  const coinDiv = document.querySelector(".coin");
-  const resultH2 = document.querySelector("#result h2");
-
-  if (data) {
+  function renderDataToView(data) {
+    const coinDiv = document.querySelector(".coin");
+    const resultH2 = document.querySelector("#result h2");
+    if (!data) return;
     document.getElementById("flip-id").textContent = data.id ?? "—";
-    // Human readable local time for created_at
     document.getElementById("flip-created").textContent = data.created_at
       ? new Date(data.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
       : "—";
-    // Expiry as relative time (e.g. "in 10 minutes")
     const expiresText = (() => {
       if (!data.expires_at) return "—";
       if (data.result !== null) return "Completed";
@@ -111,22 +62,12 @@ export async function renderFlipView(container, id) {
       return `in ${diffMins} minutes`;
     })();
     document.getElementById("flip-expires").textContent = expiresText;
-
-    /**
-     * Disable flip button if expired
-     */
     if (flipBtn && expiresText === "Expired") {
       flipBtn.disabled = true;
     }
-    /**
-     * Disable the flip button if already flipped
-     */
     if (flipBtn && data.result !== null) {
       flipBtn.disabled = true;
     }
-    /**
-     * Set coin and result if already flipped
-     */
     if (coinDiv && data.result !== null) {
       coinDiv.classList.remove("heads", "tails");
       coinDiv.classList.add(data.result ? "heads" : "tails");
@@ -135,7 +76,6 @@ export async function renderFlipView(container, id) {
       resultH2.textContent = data.result ? "Heads" : "Tails";
       document.getElementById("result").classList.add("has-result");
       let shareBtn = document.getElementById("share-result-button");
-
       if (!shareBtn) {
         shareBtn = document.createElement("button");
         shareBtn.id = "share-result-button";
@@ -151,10 +91,6 @@ export async function renderFlipView(container, id) {
             showToast("Failed to copy link");
           }
         });
-
-        /**
-         * Home link
-         */
         let homeLink = document.createElement("a");
         homeLink.href = window.location.pathname;
         homeLink.className = "home-link";
@@ -163,9 +99,64 @@ export async function renderFlipView(container, id) {
       }
     } else if (resultH2) {
       resultH2.textContent = "Pending";
-      const shareBtn = document.getElementById("share-result-btn");
+      const shareBtn = document.getElementById("share-result-button");
       if (shareBtn) shareBtn.remove();
     }
+  }
+
+  /**
+   * Function to fetch from supabase and update cache/UI
+   */
+  async function fetchFromSupabaseAndRender() {
+    try {
+      const { data: fetched, error } = await supabase.from("flip-results").select("*").eq("id", id).single();
+      if (error || !fetched) {
+        console.error("Error fetching flip result:", error?.message);
+        delete cache[id];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+        return;
+      }
+      data = fetched;
+      cache[id] = data;
+      // Limit to 10 most recent IDs
+      const keys = Object.keys(cache);
+      if (keys.length > 10) {
+        const oldest = keys.sort((a, b) => {
+          const aTime = new Date(cache[a]?.created_at || 0).getTime();
+          const bTime = new Date(cache[b]?.created_at || 0).getTime();
+          return aTime - bTime;
+        });
+        for (let i = 0; i < keys.length - 10; i++) {
+          delete cache[oldest[i]];
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+      renderDataToView(data);
+      // Enable flip button if not expired or already flipped
+      const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
+      const alreadyFlipped = data && data.result !== null;
+      if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
+    } catch (err) {
+      console.error("Unexpected error fetching flip result:", err);
+      delete cache[id];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+    }
+  }
+
+  // If data is in cache, render immediately and enable button if allowed
+  if (data) {
+    renderDataToView(data);
+    const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
+    const alreadyFlipped = data && data.result !== null;
+    if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
+    if (captchaDiv) captchaDiv.remove();
+  } else {
+    // If not in cache, set up captcha callback to fetch from supabase after captcha
+    window.onCaptchaSuccess = function () {
+      fetchFromSupabaseAndRender();
+      if (captchaDiv) captchaDiv.remove();
+    };
+    if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
   }
 
   /**
@@ -193,7 +184,8 @@ export async function renderFlipView(container, id) {
     if (window.hcaptcha) window.hcaptcha.reset();
 
     const result = simulateCoinFlip();
-
+    const coinDiv = document.querySelector(".coin");
+    const resultH2 = document.querySelector("#result h2");
     if (coinDiv) {
       coinDiv.classList.add(result ? "heads" : "tails");
     }
@@ -206,25 +198,18 @@ export async function renderFlipView(container, id) {
 
     try {
       const { data: updated, error } = await supabase.from("flip-results").update({ result }).eq("id", id).select();
-
       if (error) {
         console.error("Error updating flip result:", error.message);
         return;
       }
-
-      /**
-       * Update cache and UI with the new result
-       */
       data.result = result;
       cache[id] = data;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-
       setTimeout(() => {
         if (resultH2) {
           resultH2.textContent = result ? "Heads" : "Tails";
         }
         document.getElementById("result").classList.add("has-result");
-        // Add share button if not already present after flip
         let shareBtn = document.getElementById("share-result-button");
         if (!shareBtn) {
           shareBtn = document.createElement("button");
