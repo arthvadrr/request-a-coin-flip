@@ -85,6 +85,15 @@ export async function renderFlipView(container, id) {
    */
   container.innerHTML = html;
   const flipBtn = document.getElementById("flipCoin");
+  if (flipBtn) flipBtn.disabled = true;
+  // Enable button when captcha is solved
+  window.onCaptchaSuccess = function () {
+    if (flipBtn) flipBtn.disabled = false;
+  };
+  // Attach hCaptcha callback
+  const captchaDiv = document.querySelector(".h-captcha");
+  if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
+
   const coinDiv = document.querySelector(".coin");
   const resultH2 = document.querySelector("#result h2");
 

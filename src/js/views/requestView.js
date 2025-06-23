@@ -65,8 +65,17 @@ async function handleRequestFlip(e) {
 }
 
 export function renderRequestView(container) {
+  container.innerHTML = html;
+  const requestBtn = document.getElementById("requestFlip");
+  if (requestBtn) requestBtn.disabled = true;
+  // Enable button when captcha is solved
+  window.onCaptchaSuccess = function () {
+    if (requestBtn) requestBtn.disabled = false;
+  };
+  // Attach hCaptcha callback
+  const captchaDiv = document.querySelector(".h-captcha");
+  if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
+  document.getElementById("requestFlip").addEventListener("click", handleRequestFlip);
   ensureAnonymousLogin();
   supabase.auth.getUser();
-  container.innerHTML = html;
-  document.getElementById("requestFlip").addEventListener("click", handleRequestFlip);
 }
