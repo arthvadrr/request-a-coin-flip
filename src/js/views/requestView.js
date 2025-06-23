@@ -13,12 +13,14 @@ async function handleRequestFlip(e) {
     return;
   }
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    // Anonymous sign-in with captcha
+    const { data: userData, error: userError } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
     const userId = userData?.user?.id;
-
     if (!userId || userError) {
-      console.error("User fetch failed:", userError?.message || "No user ID");
-      throw new Error("Unable to get authenticated user.");
+      showToast("Auth failed: " + (userError?.message || "No user ID"));
+      if (window.hcaptcha) window.hcaptcha.reset();
+      e.target.disabled = false;
+      return;
     }
 
     const { data, error, status } = await supabase

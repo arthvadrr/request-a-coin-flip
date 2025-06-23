@@ -9,7 +9,20 @@ import { ensureAnonymousLogin } from "../util/auth.js";
  * Render the flip view, fetch and cache flip data, and handle coin flip logic.
  */
 export async function renderFlipView(container, id) {
-  await ensureAnonymousLogin();
+  // Anonymous sign-in with captcha before proceeding
+  const captchaToken = window.hcaptcha && window.hcaptcha.getResponse();
+  if (!captchaToken) {
+    showToast("Please complete the captcha.");
+    return;
+  }
+  const { data: userData, error: userError } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
+  if (!userData?.user?.id || userError) {
+    showToast("Auth failed: " + (userError?.message || "No user ID"));
+    if (window.hcaptcha) window.hcaptcha.reset();
+    return;
+  }
+  if (window.hcaptcha) window.hcaptcha.reset();
+
   /**
    * Variable declarations
    */
