@@ -1,18 +1,18 @@
 .request-result {
-	display: none;
-	background-color: var(--color-success);
-	color: var(--color-success-dark);
-	outline: 1rem solid rgba(#7ffbbb, 0.5);
-	padding: 1rem;
-	margin-top: 1rem;
+  display: none;
+  background-color: var(--color-success);
+  color: var(--color-success-dark);
+  outline: 0.5rem solid rgba(#7ffbbb, 0.5);
+  padding: 0.5rem;
+  margin-top: 0.5rem;
 
-	&#request-error {
-		background-color: var(--color-error);
-		outline-color: rgba(#ff8b9e, 0.5);
-		color: var(--color-error-dark);
-	}
+  &#request-error {
+    background-color: var(--color-error);
+    outline-color: rgba(#ff8b9e, 0.5);
+    color: var(--color-error-dark);
+  }
 
-	&.show {
-		display: block;
-	}
+  &.show {
+    display: block;
+  }
 }

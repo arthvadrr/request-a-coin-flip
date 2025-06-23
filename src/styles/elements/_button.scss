@@ -1,21 +1,21 @@
 .button {
   background: var(--color-primary);
   color: var(--color-light);
-  padding: 2rem 1rem;
-  font-size: 1.2rem;
+  padding: 1rem;
+  font-size: 1rem;
   font-family: inherit;
   border: none;
   transition: all 80ms ease-in-out;
-  outline: 1rem solid transparent;
+  outline: 0.5rem solid transparent;
   cursor: pointer;
 
   &:hover,
   &:focus {
-    outline: 1rem solid rgba(#821433, 0.5);
+    outline: 0.5rem solid rgba(#821433, 0.5);
   }
 
   &:active {
-    outline: 1rem solid rgba(#821433, 0.75);
+    outline: 0.5rem solid rgba(#821433, 0.75);
   }
 
   &.full {
@@ -29,11 +29,16 @@
 
   .icon {
     display: inline-block;
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1rem;
+    height: 1rem;
     stroke-width: 0;
     stroke: currentColor;
     fill: currentColor;
     margin-right: 0.25rem;
+  }
+
+  &.secondary {
+    width: 100%;
+    border: 1px solid #000;
   }
 }

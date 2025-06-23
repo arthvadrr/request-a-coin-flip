@@ -91,6 +91,7 @@ export async function renderFlipView(container, id) {
     // Expiry as relative time (e.g. "in 10 minutes")
     const expiresText = (() => {
       if (!data.expires_at) return "—";
+      if (data.result !== null) return "Completed";
       const expires = new Date(data.expires_at);
       const now = new Date();
       const diffMs = expires - now;
@@ -141,6 +142,15 @@ export async function renderFlipView(container, id) {
             showToast("Failed to copy link");
           }
         });
+
+        /**
+         * Home link
+         */
+        let homeLink = document.createElement("a");
+        homeLink.href = window.location.pathname;
+        homeLink.className = "home-link";
+        homeLink.textContent = "Request another coin flip";
+        shareBtn.insertAdjacentElement("afterend", homeLink);
       }
     } else if (resultH2) {
       resultH2.textContent = "Pending";
