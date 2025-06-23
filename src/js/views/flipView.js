@@ -3,25 +3,12 @@ import { supabase } from "../util/supabaseClient.js";
 import { simulateCoinFlip } from "../util/coinFlip.js";
 import { copyToClipboard } from "../copyToClipboard.js";
 import { showToast } from "../util/toast.js";
-import { ensureAnonymousLogin } from "../util/auth.js";
 
 /**
  * Render the flip view, fetch and cache flip data, and handle coin flip logic.
  */
 export async function renderFlipView(container, id) {
-  // Anonymous sign-in with captcha before proceeding
-  const captchaToken = window.hcaptcha && window.hcaptcha.getResponse();
-  if (!captchaToken) {
-    showToast("Please complete the captcha.");
-    return;
-  }
-  const { data: userData, error: userError } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
-  if (!userData?.user?.id || userError) {
-    showToast("Auth failed: " + (userError?.message || "No user ID"));
-    if (window.hcaptcha) window.hcaptcha.reset();
-    return;
-  }
-  if (window.hcaptcha) window.hcaptcha.reset();
+  container.innerHTML = html;
 
   /**
    * Variable declarations
@@ -81,19 +68,26 @@ export async function renderFlipView(container, id) {
   }
 
   /**
-   * Render HTML and update UI with data
+   * Query DOM elements after rendering
    */
-  container.innerHTML = html;
   const flipBtn = document.getElementById("flipCoin");
-  if (flipBtn) flipBtn.disabled = true;
-  // Enable button when captcha is solved
-  window.onCaptchaSuccess = function () {
-    if (flipBtn) flipBtn.disabled = false;
-  };
-  // Attach hCaptcha callback
   const captchaDiv = document.querySelector(".h-captcha");
+  if (flipBtn) flipBtn.disabled = true;
+
+  /**
+   * Enable flip button and remove captcha when solved
+   */
+  window.onCaptchaSuccess = function () {
+    const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
+    const alreadyFlipped = data && data.result !== null;
+    if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
+    if (captchaDiv) captchaDiv.remove();
+  };
   if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
 
+  /**
+   * Query coin and result elements
+   */
   const coinDiv = document.querySelector(".coin");
   const resultH2 = document.querySelector("#result h2");
 
@@ -127,8 +121,8 @@ export async function renderFlipView(container, id) {
     /**
      * Disable the flip button if already flipped
      */
-    if (flipBtn) {
-      flipBtn.disabled = data.result !== null;
+    if (flipBtn && data.result !== null) {
+      flipBtn.disabled = true;
     }
     /**
      * Set coin and result if already flipped
@@ -188,6 +182,15 @@ export async function renderFlipView(container, id) {
       if (flipBtn) flipBtn.disabled = false;
       return;
     }
+    // Anonymous sign-in with captcha
+    const { data: userData, error: userError } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
+    if (!userData?.user?.id || userError) {
+      showToast("Auth failed: " + (userError?.message || "No user ID"));
+      if (window.hcaptcha) window.hcaptcha.reset();
+      if (flipBtn) flipBtn.disabled = true;
+      return;
+    }
+    if (window.hcaptcha) window.hcaptcha.reset();
 
     const result = simulateCoinFlip();
 
@@ -195,7 +198,7 @@ export async function renderFlipView(container, id) {
       coinDiv.classList.add(result ? "heads" : "tails");
     }
     if (flipBtn) {
-      flipBtn.disabled = true;
+      flipBtn.disabled = true; // Permanently disable after click
     }
     if (resultH2) {
       resultH2.textContent = "Flipping...";

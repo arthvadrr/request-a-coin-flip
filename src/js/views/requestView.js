@@ -1,25 +1,28 @@
 import html from "../../html/requestView.html";
 import { supabase } from "../util/supabaseClient.js";
 import { copyToClipboard } from "../copyToClipboard.js";
-import { ensureAnonymousLogin } from "../util/auth.js";
 import { showToast } from "../util/toast.js";
 
 async function handleRequestFlip(e) {
   e.target.disabled = true;
   const captchaToken = window.hcaptcha && window.hcaptcha.getResponse();
+  console.log("[Captcha] Token before sign-in:", captchaToken);
   if (!captchaToken) {
     showToast("Please complete the captcha.");
     e.target.disabled = false;
     return;
   }
   try {
-    // Anonymous sign-in with captcha
+    /**
+     * Captcha sign in
+     */
     const { data: userData, error: userError } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
+    console.log("[Auth] Result:", userData, userError);
     const userId = userData?.user?.id;
     if (!userId || userError) {
       showToast("Auth failed: " + (userError?.message || "No user ID"));
       if (window.hcaptcha) window.hcaptcha.reset();
-      e.target.disabled = false;
+      // Do not re-enable the button on error
       return;
     }
 
@@ -59,22 +62,38 @@ async function handleRequestFlip(e) {
     console.error(err);
     const $div__request_error = document.getElementById("request-error");
     $div__request_error.classList.add("show");
+    // Do not re-enable the button on error
   } finally {
     if (window.hcaptcha) window.hcaptcha.reset();
   }
 }
 
 export function renderRequestView(container) {
+  /**
+   * Render HTML and update UI
+   */
   container.innerHTML = html;
+
+  /**
+   * Query DOM elements after rendering
+   */
   const requestBtn = document.getElementById("requestFlip");
   if (requestBtn) requestBtn.disabled = true;
-  // Enable button when captcha is solved
+
+  /**
+   * Enable button when captcha is solved and remove captcha
+   */
   window.onCaptchaSuccess = function () {
     if (requestBtn) requestBtn.disabled = false;
+    const captchaDiv = document.querySelector(".h-captcha");
+    if (captchaDiv) captchaDiv.remove();
   };
-  // Attach hCaptcha callback
+
+  /**
+   * Attach hCaptcha callback
+   */
   const captchaDiv = document.querySelector(".h-captcha");
   if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
+
   document.getElementById("requestFlip").addEventListener("click", handleRequestFlip);
-  // Remove any eager auth calls on load
 }
