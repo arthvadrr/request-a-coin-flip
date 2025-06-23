@@ -1,6 +1,14 @@
 section {
 	display: grid;
 	background: var(--color-light);
+	background-image: linear-gradient(
+		to right bottom,
+		#ffffff,
+		#eaeaea,
+		#d5d5d5,
+		#c0c0c0,
+		#acacac
+	);
 	padding: 1rem;
 	text-align: left;
 	gap: 1rem;

@@ -3,7 +3,7 @@ import { renderFlipView } from './views/flipView.js';
 import '../styles/main.scss';
 
 const params = new URLSearchParams(window.location.search);
-const flipId = params.get('flip');
+const flipId = params.get('flipid');
 const app = document.getElementById('app');
 
 if (flipId) {
