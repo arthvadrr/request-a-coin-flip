@@ -10,6 +10,7 @@
 @use "./elements/coin";
 @use "./elements/result";
 @use "./elements/flip-meta";
+@use "./elements/h-captcha";
 
 main * {
   box-sizing: border-box;
