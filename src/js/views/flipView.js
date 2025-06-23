@@ -160,6 +160,12 @@ export async function renderFlipView(container, id) {
       if (flipBtn) flipBtn.disabled = true;
       return;
     }
+    const captchaToken = window.hcaptcha && window.hcaptcha.getResponse();
+    if (!captchaToken) {
+      showToast("Please complete the captcha.");
+      if (flipBtn) flipBtn.disabled = false;
+      return;
+    }
 
     const result = simulateCoinFlip();
 
@@ -218,6 +224,8 @@ export async function renderFlipView(container, id) {
       }, 3000);
     } catch (err) {
       console.error("Unexpected error updating flip result:", err);
+    } finally {
+      if (window.hcaptcha) window.hcaptcha.reset();
     }
   }
 

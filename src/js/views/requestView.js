@@ -6,7 +6,12 @@ import { showToast } from "../util/toast.js";
 
 async function handleRequestFlip(e) {
   e.target.disabled = true;
-
+  const captchaToken = window.hcaptcha && window.hcaptcha.getResponse();
+  if (!captchaToken) {
+    showToast("Please complete the captcha.");
+    e.target.disabled = false;
+    return;
+  }
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
@@ -52,6 +57,8 @@ async function handleRequestFlip(e) {
     console.error(err);
     const $div__request_error = document.getElementById("request-error");
     $div__request_error.classList.add("show");
+  } finally {
+    if (window.hcaptcha) window.hcaptcha.reset();
   }
 }
 
