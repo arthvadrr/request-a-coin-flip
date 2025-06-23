@@ -1,38 +1,28 @@
 <section>
-	<h2 class="center">How it works</h2>
-	<ol>
-		<li>
-			Selet the button below. A unique link will be copied to your clipboard to
-			share with someone.
-		</li>
-		<li>When they use the link to flip the coin, the result will be saved.</li>
-		<li>You can both view the result at that link.</li>
-	</ol>
+  <h2 class="center">How it works</h2>
+  <p>
+    Use the button below to create a new coin flip and send it to someone. The recipient has an hour to flip their coin.
+    The result will be available at the generated URL for a day.
+  </p>
 
-	<button
-		id="requestFlip"
-		class="button full"
-	>
-		<svg class="icon icon-share"><use xlink:href="#icon-share"></use></svg>
-		<span>Request a Coin Flip</span>
-	</button>
-	<div
-		class="request-result"
-		id="request-success"
-	>
-		<h2>Success!</h2>
-		<p>
-			Your single use coin flip link has been created and
-			<strong>copied</strong> to your clipboard! Please
-			<strong>share the link</strong> with someone and they will be prompted to
-			flip.
-		</p>
-	</div>
-	<div
-		class="request-result"
-		id="request-error"
-	>
-		<h2>Error!</h2>
-		<p>Oops! Something went wrong. Please try again later.</p>
-	</div>
+  <button id="requestFlip" class="button full">
+    <svg class="icon icon-contrast"><use xlink:href="#icon-contrast"></use></svg>
+    <span>Create a Coin Flip</span>
+  </button>
+  <div class="request-result" id="request-success">
+    <h2>Success!</h2>
+    <p>
+      Your single use coin flip link has been created! Please <strong>share the link</strong> with someone and they will
+      be prompted to flip.
+    </p>
+    <button id="copy-flip-link" class="button secondary">
+      <svg class="icon icon-share"><use xlink:href="#icon-share"></use></svg>
+      <span>Share this Coin Flip</span>
+    </button>
+    <p id="created-flip-link" style="word-break: break-all; margin-top: 0.5em"></p>
+  </div>
+  <div class="request-result" id="request-error">
+    <h2>Error!</h2>
+    <p>Oops! Something went wrong. Please try again later.</p>
+  </div>
 </section>
