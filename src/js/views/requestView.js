@@ -37,7 +37,12 @@ async function handleRequestFlip(e) {
     const $div__request_success = document.getElementById("request-success");
     const $copyBtn = document.getElementById("copy-flip-link");
     const $link = document.getElementById("created-flip-link");
+    const $id = document.getElementById("created-flip-id");
+
     $link.textContent = flipUrl;
+
+    if ($id) $id.textContent = data[0].id;
+
     $div__request_success.classList.add("show");
     $copyBtn.onclick = async () => {
       await copyToClipboard(flipUrl);
@@ -52,10 +57,7 @@ async function handleRequestFlip(e) {
 
 export function renderRequestView(container) {
   ensureAnonymousLogin();
-  supabase.auth.getUser().then(({ data }) => {
-    console.log("Supabase user ID:", data?.user?.id);
-  });
-
+  supabase.auth.getUser();
   container.innerHTML = html;
   document.getElementById("requestFlip").addEventListener("click", handleRequestFlip);
 }
