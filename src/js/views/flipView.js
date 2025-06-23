@@ -31,12 +31,6 @@ export async function renderFlipView(container, id) {
    */
   data = cache[id] || null;
 
-  if (data) {
-    console.log(`[flipView] Loaded flip row for id ${id} from localStorage.`);
-  } else {
-    console.log(`[flipView] No cache for id ${id}, requesting from Supabase...`);
-  }
-
   /**
    * If no cached data, fetch from supabase
    */
@@ -47,7 +41,6 @@ export async function renderFlipView(container, id) {
         console.error("Error fetching flip result:", error?.message);
         delete cache[id];
       } else {
-        console.log(`[flipView] Fetched flip row for id ${id} from Supabase.`);
         data = fetched;
         cache[id] = data;
 
@@ -168,9 +161,7 @@ export async function renderFlipView(container, id) {
       return;
     }
 
-    console.log("[flipView] Flip initiated. Simulating coin flip...");
     const result = simulateCoinFlip();
-    console.log(`[flipView] Simulated result: ${result ? "Heads" : "Tails"}`);
 
     if (coinDiv) {
       coinDiv.classList.add(result ? "heads" : "tails");
@@ -183,15 +174,16 @@ export async function renderFlipView(container, id) {
     }
 
     try {
-      console.log("[flipView] Attempting to update result in Supabase...");
       const { data: updated, error } = await supabase.from("flip-results").update({ result }).eq("id", id).select();
-      console.log("[flipView] Supabase update response:", updated);
+
       if (error) {
         console.error("Error updating flip result:", error.message);
         return;
       }
-      console.log("Flip result updated:", updated);
-      // Update cache and UI with the new result
+
+      /**
+       * Update cache and UI with the new result
+       */
       data.result = result;
       cache[id] = data;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
@@ -226,7 +218,6 @@ export async function renderFlipView(container, id) {
       }, 3000);
     } catch (err) {
       console.error("Unexpected error updating flip result:", err);
-      console.log("[flipView] Exception caught during update:", err);
     }
   }
 
