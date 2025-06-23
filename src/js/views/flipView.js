@@ -17,23 +17,13 @@ export async function renderFlipView(container, id) {
   let cache = {};
   let data = null;
 
-  /**
-   * Load or initialize the persistent cache object
-   */
+  // Always show captcha and keep button disabled until solved
   try {
     cache = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
   } catch (e) {
     cache = {};
   }
 
-  /**
-   * Try to get data from cache
-   */
-  data = cache[id] || null;
-
-  /**
-   * Query DOM elements after rendering
-   */
   const flipBtn = document.getElementById("flipCoin");
   const captchaDiv = document.querySelector(".h-captcha");
   if (flipBtn) flipBtn.disabled = true;
@@ -143,21 +133,23 @@ export async function renderFlipView(container, id) {
     }
   }
 
-  // If data is in cache, render immediately and enable button if allowed
-  if (data) {
-    renderDataToView(data);
-    const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
-    const alreadyFlipped = data && data.result !== null;
-    if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
-    if (captchaDiv) captchaDiv.remove();
-  } else {
-    // If not in cache, set up captcha callback to fetch from supabase after captcha
-    window.onCaptchaSuccess = function () {
+  // Always require captcha before showing data
+  window.onCaptchaSuccess = function () {
+    // After captcha, check local storage for id
+    data = cache[id] || null;
+    if (data) {
+      renderDataToView(data);
+      const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
+      const alreadyFlipped = data && data.result !== null;
+      if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
+      if (captchaDiv) captchaDiv.remove();
+    } else {
+      // If not in cache, fetch from supabase
       fetchFromSupabaseAndRender();
       if (captchaDiv) captchaDiv.remove();
-    };
-    if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
-  }
+    }
+  };
+  if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
 
   /**
    * Handle the coin flip button click event.
