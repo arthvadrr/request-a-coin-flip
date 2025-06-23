@@ -76,6 +76,5 @@ export function renderRequestView(container) {
   const captchaDiv = document.querySelector(".h-captcha");
   if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
   document.getElementById("requestFlip").addEventListener("click", handleRequestFlip);
-  ensureAnonymousLogin();
-  supabase.auth.getUser();
+  // Remove any eager auth calls on load
 }
