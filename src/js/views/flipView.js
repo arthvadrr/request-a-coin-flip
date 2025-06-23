@@ -8,6 +8,8 @@ import { showToast } from "../util/toast.js";
  * Render the flip view, fetch and cache flip data, and handle coin flip logic.
  */
 export async function renderFlipView(container, id) {
+  window._captchaPassed = false;
+  console.log("[flipView] Captcha state reset. Waiting for user to solve captcha.");
   container.innerHTML = html;
 
   /**
@@ -32,6 +34,11 @@ export async function renderFlipView(container, id) {
    * Helper to render data to the view
    */
   function renderDataToView(data) {
+    if (!window._captchaPassed) {
+      console.warn("[flipView] WARNING: Attempted to render data before captcha was solved.");
+      return;
+    }
+    console.log("[flipView] Rendering data to view:", data);
     const coinDiv = document.querySelector(".coin");
     const resultH2 = document.querySelector("#result h2");
     if (!data) return;
@@ -98,6 +105,7 @@ export async function renderFlipView(container, id) {
    * Function to fetch from supabase and update cache/UI
    */
   async function fetchFromSupabaseAndRender() {
+    console.log("[flipView] Fetching data from Supabase for ID:", id);
     try {
       const { data: fetched, error } = await supabase.from("flip-results").select("*").eq("id", id).single();
       if (error || !fetched) {
@@ -135,6 +143,8 @@ export async function renderFlipView(container, id) {
 
   // Always require captcha before showing data
   window.onCaptchaSuccess = function () {
+    console.log("[flipView] Captcha solved. Proceeding with rendering.");
+    window._captchaPassed = true;
     // After captcha, check local storage for id
     data = cache[id] || null;
     if (data) {
@@ -155,6 +165,7 @@ export async function renderFlipView(container, id) {
    * Handle the coin flip button click event.
    */
   async function handleFlipCoin() {
+    console.log("[flipView] Flip button clicked.");
     if (!data || data.result !== null) {
       if (flipBtn) flipBtn.disabled = true;
       return;
