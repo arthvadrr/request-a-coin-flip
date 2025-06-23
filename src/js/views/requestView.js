@@ -1,28 +1,8 @@
 import html from '../../html/requestView.html';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../util/supabaseClient.js';
 import { copyToClipboard } from '../copyToClipboard.js';
-
-const SERVER_URI = process.env.SERVER_URI;
-const ANON_KEY = process.env.ANON_KEY;
-const supabase = createClient(SERVER_URI, ANON_KEY);
-
-async function ensureAnonymousLogin() {
-	try {
-		const { data } = await supabase.auth.getSession();
-
-		if (!data.session) {
-			const { data: anonData, error: anonError } =
-				await supabase.auth.signInAnonymously();
-			if (anonError) {
-				console.error('Anonymous sign-in failed:', anonError.message);
-			} else {
-				console.log('Signed in anonymously:', anonData.user.id);
-			}
-		}
-	} catch (error) {
-		console.error('Error during anonymous login:', error.message || error);
-	}
-}
+import { ensureAnonymousLogin } from '../util/auth.js';
+import { showToast } from '../util/toast.js';
 
 async function handleRequestFlip(e) {
 	try {
@@ -53,9 +33,7 @@ async function handleRequestFlip(e) {
 			throw new Error('Insert succeeded but no data returned.');
 		}
 
-		const url = new URL(window.location.href);
-		url.pathname = `?flip_id=${data[0].id}`;
-		await copyToClipboard(url.toString());
+		await copyToClipboard(`${window.location.href}?flipid=${data[0].id}`);
 		showToast('Link copied!');
 		const $div__request_success = document.getElementById('request-success');
 		$div__request_success.classList.add('show');
@@ -63,22 +41,9 @@ async function handleRequestFlip(e) {
 		console.error(err);
 		const $div__request_error = document.getElementById('request-error');
 		$div__request_error.classList.add('show');
-		document.createElement('div');
 	} finally {
 		e.target.disabled = true;
 	}
-}
-
-function showToast(message) {
-	const toast = document.createElement('div');
-	toast.setAttribute('role', 'status');
-	toast.setAttribute('aria-live', 'polite');
-	toast.classList.add('toast');
-	toast.textContent = message;
-	document.body.appendChild(toast);
-	setTimeout(() => {
-		toast.remove();
-	}, 2000);
 }
 
 export function renderRequestView(container) {

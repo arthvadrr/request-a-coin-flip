@@ -1,70 +1,73 @@
-@use './normalize';
-@use './fonts';
-@use './typography';
-@use './elements/button';
-@use './elements/link';
-@use './elements/section';
-@use './elements/list';
-@use './elements/request-result';
-@use './elements/toast';
+@use "./normalize";
+@use "./fonts";
+@use "./typography";
+@use "./elements/button";
+@use "./elements/link";
+@use "./elements/section";
+@use "./elements/list";
+@use "./elements/request-result";
+@use "./elements/toast";
+@use "./elements/coin";
+@use "./elements/result";
+@use "./elements/flip-meta";
 
 main * {
-	box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 :root {
-	--color-bg: #282b2c;
-	--color-primary: #821433;
-	--color-accent: #dbd7d5;
-	--color-highlight: #a8546d;
-	--color-light: #bababa;
-	--color-success: #7ffbbb;
-	--color-success-dark: #214833;
-	--color-error: #ff8b9e;
-	--color-error-dark: #410000;
-	--font-body: 'Roboto', sans-serif;
+  --color-bg: #282b2c;
+  --color-primary: #821433;
+  --color-accent: #dbd7d5;
+  --color-highlight: #a8546d;
+  --color-light: #bababa;
+  --color-success: #7ffbbb;
+  --color-success-dark: #214833;
+  --color-error: #ff8b9e;
+  --color-error-dark: #410000;
+  --font-body: "Roboto", sans-serif;
 }
 
 body {
-	display: flex;
-	justify-content: center;
-	margin: 0;
-	padding: 0;
-	font-size: 16px;
-	line-height: 1.8;
-	font-family: var(--font-body);
-	min-height: 100vh;
-	background-color: #000;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1.8;
+  font-family: var(--font-body);
+  min-height: 100vh;
+  background-color: #000;
 
-	main {
-		display: grid;
-		grid-template-rows: min-content;
-		row-gap: 1rem;
-		min-height: 100vh;
-		background-color: var(--color-bg);
+  main {
+    display: grid;
+    grid-template-rows: min-content;
+    row-gap: 1rem;
+    min-height: 100vh;
+    background-color: var(--color-bg);
 
-		header {
-			padding-top: 1rem;
-		}
+    header {
+      padding-top: 1rem;
+    }
 
-		> * {
-			padding: 0 1rem;
-			width: 768px;
-			max-width: 100vw;
-			text-align: center;
-		}
+    > * {
+      padding: 0 1rem;
+      width: 768px;
+      max-width: 100vw;
+      text-align: center;
+    }
 
-		footer {
-			align-self: end;
-			background-color: var(--color-light);
-		}
-	}
+    footer {
+      align-self: end;
+      background-color: var(--color-light);
+    }
+  }
 }
 
 @media screen and (min-width: 768px) {
-	body main {
-		min-height: unset;
-		margin: 4rem;
-		overflow: hidden;
-	}
+  body main {
+    min-height: unset;
+    margin: 4rem;
+    overflow: hidden;
+  }
 }
