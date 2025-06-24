@@ -9,7 +9,6 @@ import { showToast } from "../util/toast.js";
  */
 export async function renderFlipView(container, id) {
   window._captchaPassed = false;
-  console.log("[flipView] Captcha state reset. Waiting for user to solve captcha.");
   container.innerHTML = html;
 
   /**
@@ -38,7 +37,6 @@ export async function renderFlipView(container, id) {
       console.warn("[flipView] WARNING: Attempted to render data before captcha was solved.");
       return;
     }
-    console.log("[flipView] Rendering data to view:", data);
     const coinDiv = document.querySelector(".coin");
     const resultH2 = document.querySelector("#result h2");
     if (!data) return;
@@ -60,10 +58,11 @@ export async function renderFlipView(container, id) {
     })();
     document.getElementById("flip-expires").textContent = expiresText;
     if (flipBtn && expiresText === "Expired") {
-      flipBtn.disabled = true;
-    }
-    if (flipBtn && data.result !== null) {
-      flipBtn.disabled = true;
+      flipBtn.setAttribute("disabled", "disabled");
+    } else if (flipBtn && data.result !== null) {
+      flipBtn.setAttribute("disabled", "disabled");
+    } else if (flipBtn) {
+      flipBtn.removeAttribute("disabled");
     }
     if (coinDiv && data.result !== null) {
       coinDiv.classList.remove("heads", "tails");
@@ -105,7 +104,6 @@ export async function renderFlipView(container, id) {
    * Function to fetch from supabase and update cache/UI
    */
   async function fetchFromSupabaseAndRender() {
-    console.log("[flipView] Fetching data from Supabase for ID:", id);
     try {
       const { data: fetched, error } = await supabase.from("flip-results").select("*").eq("id", id).single();
       if (error || !fetched) {
@@ -133,7 +131,7 @@ export async function renderFlipView(container, id) {
       // Enable flip button if not expired or already flipped
       const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
       const alreadyFlipped = data && data.result !== null;
-      if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
+      if (flipBtn && !expired && !alreadyFlipped) flipBtn.removeAttribute("disabled");
     } catch (err) {
       console.error("Unexpected error fetching flip result:", err);
       delete cache[id];
@@ -143,7 +141,6 @@ export async function renderFlipView(container, id) {
 
   // Always require captcha before showing data
   window.onCaptchaSuccess = function () {
-    console.log("[flipView] Captcha solved. Proceeding with rendering.");
     window._captchaPassed = true;
     // After captcha, check local storage for id
     data = cache[id] || null;
@@ -151,7 +148,9 @@ export async function renderFlipView(container, id) {
       renderDataToView(data);
       const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
       const alreadyFlipped = data && data.result !== null;
-      if (flipBtn && !expired && !alreadyFlipped) flipBtn.disabled = false;
+      // Fresh lookup for flip button and enable if appropriate
+      const freshFlipBtn = document.getElementById("flipCoin");
+      if (freshFlipBtn && !expired && !alreadyFlipped) freshFlipBtn.removeAttribute("disabled");
       if (captchaDiv) captchaDiv.remove();
     } else {
       // If not in cache, fetch from supabase
@@ -165,7 +164,6 @@ export async function renderFlipView(container, id) {
    * Handle the coin flip button click event.
    */
   async function handleFlipCoin() {
-    console.log("[flipView] Flip button clicked.");
     if (!data || data.result !== null) {
       if (flipBtn) flipBtn.disabled = true;
       return;
