@@ -4,21 +4,14 @@ import { simulateCoinFlip } from "../util/coinFlip.js";
 import { copyToClipboard } from "../copyToClipboard.js";
 import { showToast } from "../util/toast.js";
 
-/**
- * Render the flip view, fetch and cache flip data, and handle coin flip logic.
- */
 export async function renderFlipView(container, id) {
   window._captchaPassed = false;
   container.innerHTML = html;
 
-  /**
-   * Variable declarations
-   */
   const STORAGE_KEY = "request-a-coin-flip";
   let cache = {};
   let data = null;
 
-  // Always show captcha and keep button disabled until solved
   try {
     cache = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
   } catch (e) {
@@ -29,17 +22,14 @@ export async function renderFlipView(container, id) {
   const captchaDiv = document.querySelector(".h-captcha");
   if (flipBtn) flipBtn.disabled = true;
 
-  /**
-   * Helper to render data to the view
-   */
   function renderDataToView(data) {
-    if (!window._captchaPassed) {
-      console.warn("[flipView] WARNING: Attempted to render data before captcha was solved.");
+    if (!window._captchaPassed || !data) {
+      console.log("[flipView] renderDataToView: Captcha not passed or no data", {
+        captcha: window._captchaPassed,
+        data,
+      });
       return;
     }
-    const coinDiv = document.querySelector(".coin");
-    const resultH2 = document.querySelector("#result h2");
-    if (!data) return;
     document.getElementById("flip-id").textContent = data.id ?? "—";
     document.getElementById("flip-created").textContent = data.created_at
       ? new Date(data.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
@@ -47,9 +37,7 @@ export async function renderFlipView(container, id) {
     const expiresText = (() => {
       if (!data.expires_at) return "—";
       if (data.result !== null) return "Completed";
-      const expires = new Date(data.expires_at);
-      const now = new Date();
-      const diffMs = expires - now;
+      const diffMs = new Date(data.expires_at) - new Date();
       if (diffMs <= 0) return "Expired";
       const diffMins = Math.round(diffMs / 60000);
       if (diffMins < 1) return "< 1 minute";
@@ -57,52 +45,65 @@ export async function renderFlipView(container, id) {
       return `in ${diffMins} minutes`;
     })();
     document.getElementById("flip-expires").textContent = expiresText;
-    if (flipBtn && expiresText === "Expired") {
-      flipBtn.setAttribute("disabled", "disabled");
-    } else if (flipBtn && data.result !== null) {
-      flipBtn.setAttribute("disabled", "disabled");
-    } else if (flipBtn) {
-      flipBtn.removeAttribute("disabled");
+    if (flipBtn) {
+      if (expiresText === "Expired" || data.result !== null) {
+        flipBtn.setAttribute("disabled", "disabled");
+        console.log("[flipView] renderDataToView: Button should be disabled", { expiresText, result: data.result });
+      } else {
+        flipBtn.removeAttribute("disabled");
+        console.log("[flipView] renderDataToView: Button should be enabled, removed disabled attribute", {
+          expiresText,
+          result: data.result,
+          flipBtn,
+        });
+      }
+      console.log("[flipView] renderDataToView: Button state after update", {
+        disabled: flipBtn.hasAttribute("disabled"),
+        flipBtn,
+      });
+    } else {
+      console.log("[flipView] renderDataToView: No flipBtn found");
     }
+    const coinDiv = document.querySelector(".coin");
+    const resultH2 = document.querySelector("#result h2");
     if (coinDiv && data.result !== null) {
       coinDiv.classList.remove("heads", "tails");
       coinDiv.classList.add(data.result ? "heads" : "tails");
     }
-    if (resultH2 && data.result !== null) {
-      resultH2.textContent = data.result ? "Heads" : "Tails";
-      document.getElementById("result").classList.add("has-result");
-      let shareBtn = document.getElementById("share-result-button");
-      if (!shareBtn) {
-        shareBtn = document.createElement("button");
-        shareBtn.id = "share-result-button";
-        shareBtn.className = "button";
-        shareBtn.setAttribute("aria-label", "Share result");
-        shareBtn.innerHTML = `<svg class="icon icon-share"><use href="#icon-share"></use></svg>Share the result!`;
-        resultH2.parentNode.appendChild(shareBtn);
-        shareBtn.addEventListener("click", async () => {
-          try {
-            await copyToClipboard(window.location.href);
-            showToast("Result link copied!");
-          } catch (e) {
-            showToast("Failed to copy link");
-          }
-        });
-        let homeLink = document.createElement("a");
-        homeLink.href = window.location.pathname;
-        homeLink.className = "home-link";
-        homeLink.textContent = "Request another coin flip";
-        shareBtn.insertAdjacentElement("afterend", homeLink);
+    if (resultH2) {
+      if (data.result !== null) {
+        resultH2.textContent = data.result ? "Heads" : "Tails";
+        document.getElementById("result").classList.add("has-result");
+        let shareBtn = document.getElementById("share-result-button");
+        if (!shareBtn) {
+          shareBtn = document.createElement("button");
+          shareBtn.id = "share-result-button";
+          shareBtn.className = "button";
+          shareBtn.setAttribute("aria-label", "Share result");
+          shareBtn.innerHTML = `<svg class="icon icon-share"><use href="#icon-share"></use></svg>Share the result!`;
+          resultH2.parentNode.appendChild(shareBtn);
+          shareBtn.addEventListener("click", async () => {
+            try {
+              await copyToClipboard(window.location.href);
+              showToast("Result link copied!");
+            } catch (e) {
+              showToast("Failed to copy link");
+            }
+          });
+          let homeLink = document.createElement("a");
+          homeLink.href = window.location.pathname;
+          homeLink.className = "home-link";
+          homeLink.textContent = "Request another coin flip";
+          shareBtn.insertAdjacentElement("afterend", homeLink);
+        }
+      } else {
+        resultH2.textContent = "Pending";
+        const shareBtn = document.getElementById("share-result-button");
+        if (shareBtn) shareBtn.remove();
       }
-    } else if (resultH2) {
-      resultH2.textContent = "Pending";
-      const shareBtn = document.getElementById("share-result-button");
-      if (shareBtn) shareBtn.remove();
     }
   }
 
-  /**
-   * Function to fetch from supabase and update cache/UI
-   */
   async function fetchFromSupabaseAndRender() {
     try {
       const { data: fetched, error } = await supabase.from("flip-results").select("*").eq("id", id).single();
@@ -114,24 +115,13 @@ export async function renderFlipView(container, id) {
       }
       data = fetched;
       cache[id] = data;
-      // Limit to 10 most recent IDs
       const keys = Object.keys(cache);
       if (keys.length > 10) {
-        const oldest = keys.sort((a, b) => {
-          const aTime = new Date(cache[a]?.created_at || 0).getTime();
-          const bTime = new Date(cache[b]?.created_at || 0).getTime();
-          return aTime - bTime;
-        });
-        for (let i = 0; i < keys.length - 10; i++) {
-          delete cache[oldest[i]];
-        }
+        const oldest = keys.sort((a, b) => new Date(cache[a]?.created_at || 0) - new Date(cache[b]?.created_at || 0));
+        for (let i = 0; i < keys.length - 10; i++) delete cache[oldest[i]];
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
       renderDataToView(data);
-      // Enable flip button if not expired or already flipped
-      const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
-      const alreadyFlipped = data && data.result !== null;
-      if (flipBtn && !expired && !alreadyFlipped) flipBtn.removeAttribute("disabled");
     } catch (err) {
       console.error("Unexpected error fetching flip result:", err);
       delete cache[id];
@@ -139,30 +129,19 @@ export async function renderFlipView(container, id) {
     }
   }
 
-  // Always require captcha before showing data
   window.onCaptchaSuccess = function () {
     window._captchaPassed = true;
-    // After captcha, check local storage for id
     data = cache[id] || null;
+    console.log("[flipView] onCaptchaSuccess: Captcha solved, data:", data);
     if (data) {
       renderDataToView(data);
-      const expired = data && data.expires_at && new Date(data.expires_at) - new Date() <= 0;
-      const alreadyFlipped = data && data.result !== null;
-      // Fresh lookup for flip button and enable if appropriate
-      const freshFlipBtn = document.getElementById("flipCoin");
-      if (freshFlipBtn && !expired && !alreadyFlipped) freshFlipBtn.removeAttribute("disabled");
-      if (captchaDiv) captchaDiv.remove();
     } else {
-      // If not in cache, fetch from supabase
-      fetchFromSupabaseAndRender();
-      if (captchaDiv) captchaDiv.remove();
+      fetchFromSupabaseAndRender(); // fetchFromSupabaseAndRender will call renderDataToView when data is ready
     }
+    if (captchaDiv) captchaDiv.remove();
   };
   if (captchaDiv) captchaDiv.setAttribute("data-callback", "onCaptchaSuccess");
 
-  /**
-   * Handle the coin flip button click event.
-   */
   async function handleFlipCoin() {
     if (!data || data.result !== null) {
       if (flipBtn) flipBtn.disabled = true;
@@ -174,7 +153,6 @@ export async function renderFlipView(container, id) {
       if (flipBtn) flipBtn.disabled = false;
       return;
     }
-    // Anonymous sign-in with captcha
     const { data: userData, error: userError } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
     if (!userData?.user?.id || userError) {
       showToast("Auth failed: " + (userError?.message || "No user ID"));
@@ -187,15 +165,9 @@ export async function renderFlipView(container, id) {
     const result = simulateCoinFlip();
     const coinDiv = document.querySelector(".coin");
     const resultH2 = document.querySelector("#result h2");
-    if (coinDiv) {
-      coinDiv.classList.add(result ? "heads" : "tails");
-    }
-    if (flipBtn) {
-      flipBtn.disabled = true; // Permanently disable after click
-    }
-    if (resultH2) {
-      resultH2.textContent = "Flipping...";
-    }
+    if (coinDiv) coinDiv.classList.add(result ? "heads" : "tails");
+    if (flipBtn) flipBtn.disabled = true;
+    if (resultH2) resultH2.textContent = "Flipping...";
 
     try {
       const { data: updated, error } = await supabase.from("flip-results").update({ result }).eq("id", id).select();
@@ -207,9 +179,7 @@ export async function renderFlipView(container, id) {
       cache[id] = data;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
       setTimeout(() => {
-        if (resultH2) {
-          resultH2.textContent = result ? "Heads" : "Tails";
-        }
+        if (resultH2) resultH2.textContent = result ? "Heads" : "Tails";
         document.getElementById("result").classList.add("has-result");
         let shareBtn = document.getElementById("share-result-button");
         if (!shareBtn) {
@@ -240,10 +210,5 @@ export async function renderFlipView(container, id) {
     }
   }
 
-  /**
-   * Attach event listener to the flip button
-   */
-  if (flipBtn) {
-    flipBtn.addEventListener("click", handleFlipCoin);
-  }
+  if (flipBtn) flipBtn.addEventListener("click", handleFlipCoin);
 }
