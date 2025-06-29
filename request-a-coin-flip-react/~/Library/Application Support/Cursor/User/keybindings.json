@@ -1,0 +1,25 @@
+[
+	{
+		"key": "cmd+i",
+		"command": "-selectPrevSuggestion",
+		"when": "suggestWidgetVisible"
+	},
+	{
+		"key": "cmd+i",
+		"command": "-cursorUp",
+		"when": "textInputFocus && !suggestWidgetVisible"
+	},
+	{
+		"key": "cmd+i",
+		"command": "-composerMode.agent"
+	},
+	{
+		"key": "cmd+i",
+		"command": "cursorUp",
+		"when": "textInputFocus"
+	},
+	{
+		"key": "ctrl+c",
+		"command": "composerMode.agent"
+	}
+]

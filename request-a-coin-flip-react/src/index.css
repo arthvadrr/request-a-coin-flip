@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+/* stylelint-disable-next-line at-rule-no-unknown */
+@theme {
+	--color-primary: #ff0000;
+	--color-darkbg: #242627;
+	--color-accent: #00ffd0;
+	--color-text: #f5f6fa;
+	--color-muted: #a0aec0;
+}
+
 :root {
 	background-color: #242627;
 	color: #f5f6fa;
