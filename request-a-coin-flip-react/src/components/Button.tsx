@@ -1,4 +1,4 @@
-import classNames from 'classnames';
+import clsx from 'clsx';
 import type { FC, MouseEventHandler, ReactNode, ReactElement } from 'react';
 
 export type ButtonType = 'primary' | 'secondary' | 'outline';
@@ -35,7 +35,7 @@ const Button: FC<ButtonProps> = ({
 	<button
 		type="button"
 		onClick={onClick}
-		className={classNames(baseStyles, typeStyles[type], className)}
+		className={clsx(baseStyles, typeStyles[type], className)}
 		{...props}
 	>
 		{icon && <span className="flex items-center">{icon}</span>}

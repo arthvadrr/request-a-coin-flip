@@ -10,6 +10,8 @@
 }
 
 :root {
+	display: flex;
+	justify-content: center;
 	background-color: #242627;
 	color: #f5f6fa;
 	font-synthesis: none;
@@ -22,7 +24,6 @@ body {
 	margin: 0;
 	display: flex;
 	place-items: center;
-	min-width: 320px;
 	min-height: 100vh;
 	background-color: #242627;
 	color: #f5f6fa;
